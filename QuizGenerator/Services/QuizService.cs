@@ -17,10 +17,39 @@ namespace QuizGenerator.Services
         {
             var questions = _questionBank.GetRandomQuestions(questionCount, category, difficulty);
 
+            // If not enough questions available, take what we can
+            if (questions.Count == 0)
+            {
+                questions = _questionBank.GetRandomQuestions(questionCount, null, null);
+            }
+
+            // Shuffle options within each question for extra randomness
+            var random = new Random();
+            var shuffledQuestions = new List<Question>();
+
+            foreach (var q in questions)
+            {
+                // Create a copy with shuffled options
+                var optionPairs = q.Options.Select((opt, idx) => new { Option = opt, OriginalIndex = idx }).ToList();
+                var shuffled = optionPairs.OrderBy(_ => random.Next()).ToList();
+
+                var newQuestion = new Question
+                {
+                    Id = q.Id,
+                    QuestionText = q.QuestionText,
+                    Options = shuffled.Select(x => x.Option).ToList(),
+                    CorrectAnswerIndex = shuffled.FindIndex(x => x.OriginalIndex == q.CorrectAnswerIndex),
+                    Category = q.Category,
+                    DifficultyLevel = q.DifficultyLevel
+                };
+
+                shuffledQuestions.Add(newQuestion);
+            }
+
             _currentSession = new QuizSession
             {
                 SessionId = Guid.NewGuid(),
-                Questions = questions,
+                Questions = shuffledQuestions,
                 CurrentQuestionIndex = 0,
                 Score = 0,
                 TimeLimitSeconds = timeLimitSeconds,
@@ -53,6 +82,10 @@ namespace QuizGenerator.Services
             var currentQuestion = GetCurrentQuestion();
             if (currentQuestion == null)
                 return false;
+
+            // Prevent double answering
+            if (_currentSession.SelectedAnswers.ContainsKey(_currentSession.CurrentQuestionIndex))
+                return _currentSession.SelectedAnswers[_currentSession.CurrentQuestionIndex] == currentQuestion.CorrectAnswerIndex;
 
             // Store the selected answer
             _currentSession.SelectedAnswers[_currentSession.CurrentQuestionIndex] = selectedIndex;
@@ -145,7 +178,6 @@ namespace QuizGenerator.Services
                 };
             }
 
-            // Build question results
             var questionResults = new List<QuestionResult>();
             for (int i = 0; i < _currentSession.Questions.Count; i++)
             {
@@ -160,17 +192,14 @@ namespace QuizGenerator.Services
                 });
             }
 
-            // Calculate time taken
             var timeTaken = _currentSession.EndTime.HasValue
                 ? _currentSession.EndTime.Value - _currentSession.StartTime
                 : DateTime.Now - _currentSession.StartTime;
 
-            // Calculate percentage
             double percentage = _currentSession.Questions.Count > 0
                 ? (_currentSession.Score * 100.0) / _currentSession.Questions.Count
                 : 0;
 
-            // Determine performance message and grade
             string message;
             string grade;
 

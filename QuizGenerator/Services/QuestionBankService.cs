@@ -968,6 +968,54 @@ namespace QuizGenerator.Services
                     CorrectAnswerIndex = 2,
                     Category = "Geography",
                     DifficultyLevel = Difficulty.Easy
+                },
+                // ============================================
+                // BONUS QUESTIONS (5 Extra — Total 105)
+                // ============================================
+                new Question
+                {
+                    Id = 101,
+                    QuestionText = "What programming language was developed by James Gosling at Sun Microsystems?",
+                    Options = new List<string> { "Python", "Java", "C++", "Ruby" },
+                    CorrectAnswerIndex = 1,
+                    Category = "General Knowledge",
+                    DifficultyLevel = Difficulty.Medium
+                },
+                new Question
+                {
+                    Id = 102,
+                    QuestionText = "What is the term for the rate at which velocity changes over time?",
+                    Options = new List<string> { "Speed", "Force", "Acceleration", "Momentum" },
+                    CorrectAnswerIndex = 2,
+                    Category = "Science",
+                    DifficultyLevel = Difficulty.Medium
+                },
+                new Question
+                {
+                    Id = 103,
+                    QuestionText = "What is the binary representation of the decimal number 10?",
+                    Options = new List<string> { "1010", "1001", "1100", "1110" },
+                    CorrectAnswerIndex = 0,
+                    Category = "Mathematics",
+                    DifficultyLevel = Difficulty.Medium
+                },
+                new Question
+                {
+                    Id = 104,
+                    QuestionText = "Which ancient wonder of the world was located in Alexandria, Egypt?",
+                    Options = new List<string> { "Colossus of Rhodes", "Hanging Gardens", "Great Lighthouse (Pharos)", "Temple of Artemis" },
+                    CorrectAnswerIndex = 2,
+                    Category = "History",
+                    DifficultyLevel = Difficulty.Hard
+                },
+                new Question
+                {
+                    Id = 105,
+                    QuestionText = "What is the capital city of Canada?",
+                    Options = new List<string> { "Toronto", "Vancouver", "Montreal", "Ottawa" },
+                    CorrectAnswerIndex = 3,
+                    Category = "Geography",
+                    DifficultyLevel = Difficulty.Easy
                 }
             };
         }
