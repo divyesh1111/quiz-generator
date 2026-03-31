@@ -1,0 +1,282 @@
+@page "/results"
+@inject IQuizService QuizService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Quiz Master Pro - Results</PageTitle>
+
+@if (_result == null)
+{
+    <div class="flex items-center justify-center min-h-[70vh]">
+        <div class="text-center">
+            <div class="text-6xl mb-4">🔄</div>
+            <p class="text-slate-500">Loading results...</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Score Hero Section -->
+        <div class="card text-center mb-8 animate-scale-in overflow-hidden relative">
+            <!-- Background Decoration -->
+            <div class="absolute inset-0 bg-gradient-to-br @GetResultGradient() opacity-5"></div>
+
+            <!-- Celebration Emoji -->
+            <div class="text-6xl mb-4 animate-bounce-gentle">
+                @GetResultEmoji()
+            </div>
+
+            <!-- Score Circle -->
+            <div class="relative inline-flex items-center justify-center mb-6">
+                <div class="w-40 h-40 rounded-full bg-gradient-to-br @GetResultGradient() p-1">
+                    <div class="w-full h-full rounded-full bg-white flex items-center justify-center">
+                        <div>
+                            <div class="text-4xl font-black text-gradient">
+                                @_result.CorrectAnswers/@_result.TotalQuestions
+                            </div>
+                            <div class="text-sm text-slate-400 font-medium">Score</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Percentage & Grade -->
+            <div class="mb-4">
+                <span class="text-5xl font-black text-gradient">@_result.Percentage%</span>
+            </div>
+
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold @GetGradeBadgeClass() mb-4">
+                Grade: @_result.Grade
+            </div>
+
+            <!-- Performance Message -->
+            <p class="text-xl text-slate-600 font-medium">
+                @_result.PerformanceMessage
+            </p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <!-- Correct -->
+            <div class="card text-center animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="text-2xl mb-2">✅</div>
+                <div class="text-2xl font-bold text-emerald-600">@_result.CorrectAnswers</div>
+                <div class="text-xs text-slate-400 mt-1">Correct</div>
+            </div>
+
+            <!-- Wrong -->
+            <div class="card text-center animate-slide-up" style="animation-delay: 0.15s;">
+                <div class="text-2xl mb-2">❌</div>
+                <div class="text-2xl font-bold text-red-500">@_result.WrongAnswers</div>
+                <div class="text-xs text-slate-400 mt-1">Wrong</div>
+            </div>
+
+            <!-- Time -->
+            <div class="card text-center animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="text-2xl mb-2">⏱️</div>
+                <div class="text-2xl font-bold text-amber-600">@FormatTimeTaken()</div>
+                <div class="text-xs text-slate-400 mt-1">Time Taken</div>
+            </div>
+
+            <!-- Grade -->
+            <div class="card text-center animate-slide-up" style="animation-delay: 0.25s;">
+                <div class="text-2xl mb-2">🏅</div>
+                <div class="text-2xl font-bold text-indigo-600">@_result.Grade</div>
+                <div class="text-xs text-slate-400 mt-1">Grade</div>
+            </div>
+        </div>
+
+        <!-- Performance Bar -->
+        <div class="card mb-8 animate-slide-up" style="animation-delay: 0.3s;">
+            <h3 class="font-bold text-slate-800 mb-4">Performance Overview</h3>
+            <div class="flex items-center gap-4">
+                <div class="flex-1 bg-slate-200 rounded-full h-6 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-2
+                                @GetPerformanceBarColor()"
+                         style="width: @(_result.Percentage)%">
+                        @if (_result.Percentage > 15)
+                        {
+                            <span class="text-xs font-bold text-white">@_result.Percentage%</span>
+                        }
+                    </div>
+                </div>
+                <span class="text-sm font-bold text-slate-600 w-12 text-right">@_result.Percentage%</span>
+            </div>
+        </div>
+
+        <!-- Review Section -->
+        <div class="card mb-8 animate-slide-up" style="animation-delay: 0.4s;">
+            <button @onclick="ToggleReview"
+                    class="w-full flex items-center justify-between text-left">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">📋</span>
+                    <h3 class="font-bold text-slate-800 text-lg">Detailed Review</h3>
+                </div>
+                <span class="text-2xl text-slate-400 transition-transform duration-300 @(_showReview ? "rotate-180" : "")">
+                    ▼
+                </span>
+            </button>
+
+            @if (_showReview)
+            {
+                <div class="mt-6 space-y-4 animate-slide-up">
+                    @for (int i = 0; i < _result.QuestionResults.Count; i++)
+                    {
+                        var qr = _result.QuestionResults[i];
+                        var qNum = i + 1;
+
+                        <div class="p-4 rounded-xl border-2 @(qr.IsCorrect ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50")">
+                            <!-- Question Header -->
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold
+                                            @(qr.IsCorrect ? "bg-emerald-500 text-white" : "bg-red-500 text-white")">
+                                    @(qr.IsCorrect ? "✓" : "✕")
+                                </div>
+                                <div>
+                                    <span class="text-xs font-semibold text-slate-400">Question @qNum</span>
+                                    <p class="font-semibold text-slate-800 mt-1">@qr.Question.QuestionText</p>
+                                </div>
+                            </div>
+
+                            <!-- Answers -->
+                            <div class="ml-11 space-y-2">
+                                @if (qr.SelectedAnswerIndex == -1)
+                                {
+                                    <div class="text-sm text-slate-400 italic">⏭️ Not answered (time ran out)</div>
+                                }
+                                else if (!qr.IsCorrect)
+                                {
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <span class="text-red-500">❌</span>
+                                        <span class="text-red-600">Your answer: <strong>@qr.Question.Options[qr.SelectedAnswerIndex]</strong></span>
+                                    </div>
+                                }
+
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="text-emerald-500">✅</span>
+                                    <span class="text-emerald-600">Correct answer: <strong>@qr.Question.Options[qr.Question.CorrectAnswerIndex]</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 animate-slide-up" style="animation-delay: 0.5s;">
+            <button @onclick="TryAgain" class="btn-primary flex-1 text-center flex items-center justify-center gap-2">
+                🔄 Try Again
+            </button>
+            <button @onclick="ChangeCategory" class="btn-secondary flex-1 text-center flex items-center justify-center gap-2">
+                📚 Change Category
+            </button>
+            <button @onclick="GoHome" class="btn-secondary flex-1 text-center flex items-center justify-center gap-2">
+                🏠 Go Home
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private QuizResult? _result;
+    private bool _showReview = false;
+
+    protected override void OnInitialized()
+    {
+        var session = QuizService.GetCurrentSession();
+        if (session == null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Make sure quiz is ended
+        if (!session.IsCompleted)
+        {
+            QuizService.EndQuiz();
+        }
+
+        _result = QuizService.GetResults();
+    }
+
+    private void ToggleReview()
+    {
+        _showReview = !_showReview;
+    }
+
+    private void TryAgain()
+    {
+        NavigationManager.NavigateTo("/categories");
+    }
+
+    private void ChangeCategory()
+    {
+        NavigationManager.NavigateTo("/categories");
+    }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private string FormatTimeTaken()
+    {
+        if (_result == null) return "00:00";
+        var ts = _result.TimeTaken;
+        if (ts.TotalMinutes >= 1)
+            return $"{(int)ts.TotalMinutes}m {ts.Seconds}s";
+        return $"{ts.Seconds}s";
+    }
+
+    private string GetResultEmoji()
+    {
+        if (_result == null) return "🎯";
+        return _result.Percentage switch
+        {
+            >= 90 => "🏆",
+            >= 80 => "🌟",
+            >= 70 => "🎉",
+            >= 60 => "👏",
+            >= 50 => "👍",
+            _ => "📚"
+        };
+    }
+
+    private string GetResultGradient()
+    {
+        if (_result == null) return "from-slate-400 to-slate-500";
+        return _result.Percentage switch
+        {
+            >= 80 => "from-emerald-400 to-teal-500",
+            >= 60 => "from-amber-400 to-orange-500",
+            _ => "from-red-400 to-pink-500"
+        };
+    }
+
+    private string GetGradeBadgeClass()
+    {
+        if (_result == null) return "bg-slate-100 text-slate-700";
+        return _result.Percentage switch
+        {
+            >= 90 => "bg-emerald-100 text-emerald-700",
+            >= 80 => "bg-teal-100 text-teal-700",
+            >= 70 => "bg-blue-100 text-blue-700",
+            >= 60 => "bg-amber-100 text-amber-700",
+            >= 50 => "bg-orange-100 text-orange-700",
+            _ => "bg-red-100 text-red-700"
+        };
+    }
+
+    private string GetPerformanceBarColor()
+    {
+        if (_result == null) return "bg-slate-400";
+        return _result.Percentage switch
+        {
+            >= 80 => "bg-gradient-to-r from-emerald-500 to-teal-500",
+            >= 60 => "bg-gradient-to-r from-amber-500 to-orange-500",
+            _ => "bg-gradient-to-r from-red-500 to-pink-500"
+        };
+    }
+}

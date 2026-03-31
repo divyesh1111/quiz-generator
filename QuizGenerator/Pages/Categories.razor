@@ -1,0 +1,275 @@
+@page "/categories"
+@inject IQuestionBankService QuestionBank
+@inject IQuizService QuizService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Quiz Master Pro - Choose Your Quiz</PageTitle>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Page Header -->
+    <div class="text-center mb-12 animate-fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">Set Up Your Quiz</h1>
+        <p class="text-lg text-slate-500">Customize your quiz experience</p>
+    </div>
+
+    <!-- Step 1: Category Selection -->
+    <div class="card mb-8 animate-slide-up">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <span class="text-lg font-bold text-indigo-600">1</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Choose a Category</h2>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <!-- All Categories Option -->
+            <button @onclick='() => SelectCategory("All")'
+                    class="@GetCategoryClass("All") p-4 rounded-xl text-center transition-all duration-200 border-2">
+                <div class="text-3xl mb-2">🎲</div>
+                <div class="font-semibold text-sm">All Categories</div>
+                <div class="text-xs opacity-70 mt-1">@QuestionBank.GetTotalQuestionCount() questions</div>
+            </button>
+
+            @foreach (var cat in _categoryData)
+            {
+                var catName = cat.Name;
+                <button @onclick="() => SelectCategory(catName)"
+                        class="@GetCategoryClass(catName) p-4 rounded-xl text-center transition-all duration-200 border-2">
+                    <div class="text-3xl mb-2">@cat.Icon</div>
+                    <div class="font-semibold text-sm">@cat.Name</div>
+                    <div class="text-xs opacity-70 mt-1">@cat.Count questions</div>
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Step 2: Difficulty Selection -->
+    <div class="card mb-8 animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <span class="text-lg font-bold text-purple-600">2</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Select Difficulty</h2>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button @onclick="() => SelectDifficulty(null)"
+                    class="@GetDifficultyClass(null) p-4 rounded-xl text-center transition-all duration-200 border-2">
+                <div class="text-2xl mb-1">🎯</div>
+                <div class="font-semibold text-sm">All Levels</div>
+            </button>
+            <button @onclick="() => SelectDifficulty(Difficulty.Easy)"
+                    class="@GetDifficultyClass(Difficulty.Easy) p-4 rounded-xl text-center transition-all duration-200 border-2">
+                <div class="text-2xl mb-1">🟢</div>
+                <div class="font-semibold text-sm">Easy</div>
+            </button>
+            <button @onclick="() => SelectDifficulty(Difficulty.Medium)"
+                    class="@GetDifficultyClass(Difficulty.Medium) p-4 rounded-xl text-center transition-all duration-200 border-2">
+                <div class="text-2xl mb-1">🟡</div>
+                <div class="font-semibold text-sm">Medium</div>
+            </button>
+            <button @onclick="() => SelectDifficulty(Difficulty.Hard)"
+                    class="@GetDifficultyClass(Difficulty.Hard) p-4 rounded-xl text-center transition-all duration-200 border-2">
+                <div class="text-2xl mb-1">🔴</div>
+                <div class="font-semibold text-sm">Hard</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Step 3: Question Count & Time -->
+    <div class="card mb-8 animate-slide-up" style="animation-delay: 0.2s;">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
+                <span class="text-lg font-bold text-pink-600">3</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Quiz Settings</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Question Count -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-3">
+                    📝 Number of Questions
+                </label>
+                <div class="grid grid-cols-4 gap-2">
+                    @foreach (var count in _questionCounts)
+                    {
+                        var c = count;
+                        <button @onclick="() => _questionCount = c"
+                                class="@GetCountClass(c) py-3 rounded-xl font-bold transition-all duration-200 border-2">
+                            @c
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Time Limit -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-3">
+                    ⏱️ Time Limit
+                </label>
+                <div class="grid grid-cols-4 gap-2">
+                    @foreach (var time in _timeLimits)
+                    {
+                        var t = time;
+                        <button @onclick="() => _timeLimitMinutes = t"
+                                class="@GetTimeClass(t) py-3 rounded-xl font-bold transition-all duration-200 border-2 text-sm">
+                            @t min
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Summary & Start Button -->
+    <div class="card bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-100 animate-slide-up" 
+         style="animation-delay: 0.3s;">
+
+        <h3 class="text-lg font-bold text-slate-800 mb-4">📋 Quiz Summary</h3>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="text-center">
+                <div class="text-sm text-slate-500">Category</div>
+                <div class="font-bold text-indigo-600">@_selectedCategory</div>
+            </div>
+            <div class="text-center">
+                <div class="text-sm text-slate-500">Difficulty</div>
+                <div class="font-bold text-purple-600">@(_selectedDifficulty?.ToString() ?? "All")</div>
+            </div>
+            <div class="text-center">
+                <div class="text-sm text-slate-500">Questions</div>
+                <div class="font-bold text-pink-600">@_questionCount</div>
+            </div>
+            <div class="text-center">
+                <div class="text-sm text-slate-500">Time Limit</div>
+                <div class="font-bold text-amber-600">@_timeLimitMinutes min</div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_warningMessage))
+        {
+            <div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl mb-4 text-sm">
+                ⚠️ @_warningMessage
+            </div>
+        }
+
+        <button @onclick="StartQuiz"
+                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl 
+                       font-bold text-lg hover:from-indigo-700 hover:to-purple-700 
+                       transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
+                       shadow-lg hover:shadow-xl">
+            🚀 Start Quiz
+        </button>
+    </div>
+</div>
+
+@code {
+    private string _selectedCategory = "All";
+    private Difficulty? _selectedDifficulty = null;
+    private int _questionCount = 10;
+    private int _timeLimitMinutes = 10;
+    private string _warningMessage = "";
+
+    private List<CategoryInfo> _categoryData = new();
+    private int[] _questionCounts = { 5, 10, 15, 20 };
+    private int[] _timeLimits = { 5, 10, 15, 20 };
+
+    protected override void OnInitialized()
+    {
+        var categories = QuestionBank.GetCategories();
+        var iconMap = new Dictionary<string, string>
+        {
+            { "General Knowledge", "🧠" },
+            { "Science", "🔬" },
+            { "Mathematics", "📐" },
+            { "History", "📜" },
+            { "Geography", "🌍" }
+        };
+
+        foreach (var cat in categories)
+        {
+            _categoryData.Add(new CategoryInfo
+            {
+                Name = cat,
+                Icon = iconMap.ContainsKey(cat) ? iconMap[cat] : "📝",
+                Count = QuestionBank.GetQuestionsByCategory(cat).Count
+            });
+        }
+    }
+
+    private void SelectCategory(string category)
+    {
+        _selectedCategory = category;
+        CheckAvailability();
+    }
+
+    private void SelectDifficulty(Difficulty? difficulty)
+    {
+        _selectedDifficulty = difficulty;
+        CheckAvailability();
+    }
+
+    private void CheckAvailability()
+    {
+        var available = QuestionBank.GetRandomQuestions(
+            1000,
+            _selectedCategory == "All" ? null : _selectedCategory,
+            _selectedDifficulty
+        );
+
+        if (available.Count < _questionCount)
+        {
+            _warningMessage = $"Only {available.Count} questions available for this selection. Question count will be adjusted.";
+        }
+        else
+        {
+            _warningMessage = "";
+        }
+    }
+
+    private void StartQuiz()
+    {
+        int timeLimitSeconds = _timeLimitMinutes * 60;
+        string? category = _selectedCategory == "All" ? null : _selectedCategory;
+
+        QuizService.StartNewQuiz(_questionCount, timeLimitSeconds, category, _selectedDifficulty);
+        NavigationManager.NavigateTo("/quiz");
+    }
+
+    private string GetCategoryClass(string category)
+    {
+        if (category == _selectedCategory)
+            return "bg-indigo-100 border-indigo-500 text-indigo-800 scale-105 shadow-md";
+        return "bg-white border-gray-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:scale-105";
+    }
+
+    private string GetDifficultyClass(Difficulty? difficulty)
+    {
+        if (difficulty == _selectedDifficulty)
+            return "bg-purple-100 border-purple-500 text-purple-800 scale-105 shadow-md";
+        return "bg-white border-gray-200 text-slate-600 hover:border-purple-300 hover:bg-purple-50 hover:scale-105";
+    }
+
+    private string GetCountClass(int count)
+    {
+        if (count == _questionCount)
+            return "bg-pink-100 border-pink-500 text-pink-800 scale-105 shadow-md";
+        return "bg-white border-gray-200 text-slate-600 hover:border-pink-300 hover:bg-pink-50 hover:scale-105";
+    }
+
+    private string GetTimeClass(int time)
+    {
+        if (time == _timeLimitMinutes)
+            return "bg-amber-100 border-amber-500 text-amber-800 scale-105 shadow-md";
+        return "bg-white border-gray-200 text-slate-600 hover:border-amber-300 hover:bg-amber-50 hover:scale-105";
+    }
+
+    private class CategoryInfo
+    {
+        public string Name { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public int Count { get; set; }
+    }
+}
